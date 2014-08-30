@@ -23,14 +23,29 @@ def rgb2xy(r, g, b, step=4):
     (448, 511)
     >>> rgb2xy(255, 255, 255, step=4)
     (511, 511)
+    >>> rgb2xy(0, 0, 0, step=3)
+    (0, 0)
+    >>> rgb2xy(0, 0, 255, step=3)
+    (85, 0)
+    >>> rgb2xy(0, 255, 0, step=3)
+    (0, 85)
+    >>> rgb2xy(0, 255, 255, step=3)
+    (85, 85)
+    >>> rgb2xy(128, 128, 128, step=3)
+    (3654, 42)
+    >>> rgb2xy(255, 0, 0, step=3)
+    (7310, 0)
+    >>> rgb2xy(255, 0, 255, step=3)
+    (7395, 0)
+    >>> rgb2xy(255, 255, 0, step=3)
+    (7310, 85)
+    >>> rgb2xy(255, 255, 255, step=3)
+    (7395, 85)
     '''
-    x = b / step
-    y = (g % 256) / step
-
-    # xr = r / step
-    # yr = 0
-
     if step in (1, 4):
+        x = b / step
+        y = (g % 256) / step
+
         if step == 4:
             xr = (r / step) & 0b000111
             yr = ((r / step) & 0b111000) >> 3
@@ -38,16 +53,16 @@ def rgb2xy(r, g, b, step=4):
             xr = r & 0b00001111
             yr = (r & 0b11110000) >> 4
 
+        x += xr * 256 / step
+        y += yr * 256 / step
+
     elif step in (3, 5, 17, 51):
-        xr = 0xff / step
-        yr = 0
-        xr = r & 0b00001111
-        yr = (r & 0b11110000) >> 4
+        block = 1 + 0xff / step
+        x = b // step
+        y = g // step
+        x += (r // step) * block
     else:
         raise NotImplementedError('step: {0}'.format(step))
-
-    x += xr * 256 / step
-    y += yr * 256 / step
     
     return x, y
 
@@ -71,14 +86,37 @@ def xy2rgb(x, y, step=4):
     (252, 252, 0)
     >>> xy2rgb(*rgb2xy(255, 255, 255, step=4), step=4)
     (252, 252, 252)
+    >>> xy2rgb(*rgb2xy(0, 0, 0, step=3), step=3)
+    (0, 0, 0)
+    >>> xy2rgb(*rgb2xy(0, 0, 255, step=3), step=3)
+    (0, 0, 255)
+    >>> xy2rgb(*rgb2xy(0, 255, 0, step=3), step=3)
+    (0, 255, 0)
+    >>> xy2rgb(*rgb2xy(0, 255, 255, step=3), step=3)
+    (0, 255, 255)
+    >>> xy2rgb(*rgb2xy(128, 128, 128, step=3), step=3)
+    (126, 126, 126)
+    >>> xy2rgb(*rgb2xy(255, 0, 0, step=3), step=3)
+    (255, 0, 0)
+    >>> xy2rgb(*rgb2xy(255, 0, 255, step=3), step=3)
+    (255, 0, 255)
+    >>> xy2rgb(*rgb2xy(255, 255, 0, step=3), step=3)
+    (255, 255, 0)
+    >>> xy2rgb(*rgb2xy(255, 255, 255, step=3), step=3)
+    (255, 255, 255)
     '''
-    b = step * (x % (256 / step))
-    g = step * (y % (256 / step))
-    
     if step == 4:
+        b = step * (x % (256 / step))
+        g = step * (y % (256 / step))
+    
         rx = x / (256 / step)
         ry = (y / (256 / step)) << 3
         r = (rx | ry) * step
+    elif step in (3, 5, 17, 51):
+        block = 1 + 0xff // step
+        b = step * (x % block)
+        g = step * y
+        r = step * (x // block)
     else:
         raise NotImplementedError('step: {0}'.format(step))
     
@@ -94,13 +132,15 @@ def make_image(step=4):
     '''
     >>> make_image(step=4).size
     (512, 512)
+    >>> make_image(step=3).size
+    (7396, 86)
     '''
     if step in (16, 4, 1):
         dim = int(16 / sqrt(step)) * (256 / step)
         xdim, ydim = dim, dim
     elif step in (3, 5, 17, 51):
-        ydim = 0xff / step
-        xdim = (0xff * 0xff) / (step * step)
+        ydim = 1 + 0xff // step
+        xdim = ydim * ydim
     else:
         raise NotImplementedError('step: {0}'.format(step))
 
