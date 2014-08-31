@@ -155,6 +155,34 @@ def make_image(step=4):
     
     return img
 
+def apply_image(map_img, input_img):
+    '''
+    '''
+    h = map_img.size[1]
+    
+    # Check for a known height
+    if h not in (2, 4, 6, 16, 18, 52, 86, 256):
+        raise NotImplementedError('height: {0}'.format(map_img.size[1]))
+
+    # denominator for later
+    d = 0xff // (h - 1)
+
+    # axes: input green, input red, input blue, output rgb
+    cube = numpy.fromstring(map_img.tostring(), numpy.ubyte).reshape((h, h, h, 3))
+    
+    # split input into RGB channel arrays
+    input_img_ = input_img.convert('RGB')
+    input_r, input_g, input_b = map(img2arr, input_img_.split())
+    
+    # map input to output
+    out_arr = cube[input_g/d, input_r/d, input_b/d]
+    
+    # merge output channel arrays to image
+    out_rgb = out_arr[:,:,0], out_arr[:,:,1], out_arr[:,:,2]
+    output_img = Image.merge('RGB', map(arr2img, out_rgb))
+    
+    return output_img
+
 def arr2img(ar):
     """ Convert Numeric array to PIL Image.
     """
@@ -165,35 +193,3 @@ def img2arr(im):
     """
     assert im.mode == 'L'
     return numpy.reshape(numpy.fromstring(im.tostring(), numpy.ubyte), (im.size[1], im.size[0]))
-
-if __name__ == '__main__':
-    import doctest
-    doctest.testmod()
-    
-    #    img = make_image()
-    #    from numpy import zeros
-    #    cube = zeros((64, 64, 64, 3), int)
-    #    
-    #    for red in range(0, 256, 4):
-    #        x, y = rgb2xy(red, 0, 0, 4)
-    #        
-    #        slice = img.crop((x, y, x+64, y+64))
-    #        r, g, b = slice.split()
-    #        
-    #        cube[red/4,:,:,0] = r
-    #        cube[red/4,:,:,1] = g
-    #        cube[red/4,:,:,2] = b
-    #    
-    #    print cube[0,0,0], cube[-1,-1,-1]
-    #    
-    #    photo = Image.open('/Users/migurski/Pictures/stupid bicycle.jpg')
-    #    r, g, b = map(img2arr, photo.split())
-    #    
-    #    out = cube[r/4, g/4, b/4]
-    #    rgb_out = out[:,:,0], out[:,:,1], out[:,:,2]
-    #    
-    #    Image.merge('RGB', map(arr2img, rgb_out)).save('out.png')
-    #    
-    #    exit(1)
-
-    make_image(4).save('map.png')
