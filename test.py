@@ -1,5 +1,5 @@
 from doctest import testmod
-import ColorMapper
+import ColorCheat
 
 if __name__ == '__main__':
-    testmod(ColorMapper)
+    testmod(ColorCheat)

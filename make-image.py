@@ -1,5 +1,5 @@
 import argparse
-import ColorMapper
+import ColorCheat
 
 parser = argparse.ArgumentParser(description='Make an image map of RGB space.')
 
@@ -11,4 +11,4 @@ parser.add_argument('filename', metavar='filename',
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    ColorMapper.make_image(args.step).save(args.filename)
+    ColorCheat.make_image(args.step).save(args.filename)

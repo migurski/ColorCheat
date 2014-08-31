@@ -1,5 +1,5 @@
 import argparse
-import ColorMapper
+import ColorCheat
 from PIL import Image
 
 parser = argparse.ArgumentParser(description='Apply an image map of RGB space.')
@@ -15,4 +15,4 @@ parser.add_argument('output', metavar='output',
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    ColorMapper.apply_image(Image.open(args.map), Image.open(args.input)).save(args.output)
+    ColorCheat.apply_image(Image.open(args.map), Image.open(args.input)).save(args.output)
